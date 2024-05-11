@@ -120,6 +120,16 @@ def main():
         agent = Agent(agent_id, env.agent_positions[agent_id], 'max')
         utility = calculate_utility(agent, env.grid, start_pos)
         print(f"Utility for Agent {agent_id}: {utility}")
+        
+    print("\nComparison of Search Algorithms:")
+    print("-------------------------------")
+    print("The A* search algorithm tends to find the optimal path,")
+    print("especially when there are obstacles (like potholes) in the grid.")
+    print("BFS and DFS may find suboptimal paths and can get stuck in certain scenarios.")
+    print("However, BFS guarantees the shortest path in terms of number of steps.")
+    print("DFS may take longer but could find a different path.")
+    print("A* search combines the benefits of both, ensuring optimality while")
+    print("also considering heuristic information to guide the search process.")
 
 # Call main function
 if __name__ == "__main__":

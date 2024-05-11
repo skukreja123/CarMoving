@@ -4,7 +4,7 @@ from environment import GridEnvironment
 from collections import deque
 
 
-def bfs_search(env, start, goal):
+def dfs_search(env, start, goal):
     frontier = deque([(start, [])])
     explored = set()
 
@@ -15,12 +15,12 @@ def bfs_search(env, start, goal):
         if current in explored:
             continue
         for neighbor in env.get_neighbors(*current):
-            if neighbor not in explored and env.grid[neighbor[0]][neighbor[1]] != 'A':  # Check if neighbor is not an agent position
+            if neighbor not in explored and env.grid[neighbor[0]][neighbor[1]] != 'A' and  env.grid[neighbor[0]][neighbor[1]] != 'X' :  # Check if neighbor is not an agent position
                 frontier.append((neighbor, path + [current]))
         explored.add(current)
     return None
 
-def dfs_search(env, start, goal):
+def bfs_search(env, start, goal):
     frontier = [(start, [])]
     explored = set()
 
@@ -31,7 +31,7 @@ def dfs_search(env, start, goal):
         if current in explored:
             continue
         for neighbor in env.get_neighbors(*current):
-            if neighbor not in explored and env.grid[neighbor[0]][neighbor[1]] != 'A':  # Check if neighbor is not an agent position
+            if neighbor not in explored and env.grid[neighbor[0]][neighbor[1]] != 'A' and env.grid[neighbor[0]][neighbor[1]] != 'X':  # Check if neighbor is not an agent position
                 frontier.append((neighbor, path + [current]))
         explored.add(current)
     return None
@@ -57,7 +57,7 @@ def a_star_search(env, start, goal, heuristic):
         for next in env.get_neighbors(*current):
             new_cost = cost_so_far[current] + 1
             if next not in cost_so_far or new_cost < cost_so_far[next]:
-                if env.grid[next[0]][next[1]] != 'A':  # Check if next position is not an agent position
+                if env.grid[next[0]][next[1]] != 'A' and env.grid[next[0]][next[1]] != 'X':  # Check if next position is not an agent position
                     cost_so_far[next] = new_cost
                     priority = new_cost + heuristic(next, goal)
                     frontier.put(next, priority)

@@ -17,7 +17,6 @@ class GridEnvironment:
     def generate_environment(self):
         # Place start position
         p1, p2 = self.start_pos
-        self.grid[p1][p2] = 'S'
 
         # Place goals
         goal_positions = []
@@ -39,9 +38,10 @@ class GridEnvironment:
                         self.grid[i][j] = f'O({random.randint(-50, -10)})'
                     elif rand_num < 0.3:  # 20% chance of coin
                         self.grid[i][j] = f'C({random.randint(1, 20)})'
+                    elif rand_num < 0.35:  # 5% chance of barrier
+                        self.grid[i][j] = 'X'
                     else:
-                        self.grid[i][j] = ' '
-
+                        self.grid[i][j] = ' '  # Empty space
         # Randomly place agents, making sure they're not on goal positions
         for agent_id in range(self.num_agents):
             agent_pos = (random.randint(0, self.m-1),
@@ -63,7 +63,13 @@ class GridEnvironment:
             print()
 
     def is_valid_move(self, i, j):
-        return 0 <= i < self.m and 0 <= j < self.n and self.grid[i][j] != 'X'
+        return (
+            0 <= i < self.m and 
+            0 <= j < self.n and 
+            self.grid[i][j] != 'X' and 
+            self.grid[i][j] != 'A'
+        )
+
 
     def get_neighbors(self, i, j):
         neighbors = []
