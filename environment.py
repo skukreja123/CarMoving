@@ -71,6 +71,14 @@ class GridEnvironment:
         )
 
 
+    def get_valid_positions(self):
+        valid_positions = []
+        for i in range(self.m):
+            for j in range(self.n):
+                if self.is_valid_move(i, j):
+                    valid_positions.append((i, j))
+        return valid_positions
+    
     def get_neighbors(self, i, j):
         neighbors = []
         for di, dj in [(1, 0), (-1, 0), (0, 1), (0, -1)]:

@@ -1,10 +1,11 @@
 import random
 from agent import Agent
 from environment import GridEnvironment
-import search
 from visualization import visualize_environment
 from visualization import visualize_path
 from search import bfs_search, dfs_search, a_star_search
+from constraint import Problem, AllDifferentConstraint
+import random
 
 
 # Define agent strategy function
@@ -52,7 +53,32 @@ def calculate_utility(agent, grid, start_pos):
     return utility
 
 # Define main function
-import random
+def agent_goal_constraint(agent_goal_position):
+    agent_pos, goal_pos = agent_goal_position
+    return agent_pos != goal_pos
+
+
+# Formulate CSP problem
+def formulate_csp(env, num_agents, num_goals):
+    problem = Problem()
+
+    # Define variables (agent-goal pairs)
+    variables = [f"Agent{i}_Goal{j}" for i in range(num_agents) for j in range(num_goals)]
+    problem.addVariables(variables, env.get_valid_positions())
+
+    # Define constraints
+    for i in range(num_agents):
+        for j in range(num_goals):
+            agent_goal_var = f"Agent{i}_Goal{j}"
+            print(agent_goal_var)
+            problem.addConstraint(agent_goal_constraint, [agent_goal_var])
+
+    return problem
+
+# Solve CSP problem
+def solve_csp(problem):
+    return problem.getSolution()
+
 
 def main():
     # User input for grid size, starting position, number of goals, and number of agents
@@ -69,57 +95,68 @@ def main():
     
     # Visualize the initial environment
     visualize_environment(env)
+    
+    csp_problem = formulate_csp(env, num_agents, num_goals)
+    solution = solve_csp(csp_problem)
 
-    prev_goal_positions = set()
-    for i in range(m):
-        for j in range(n):
-            if env.grid[i][j] is not None and env.grid[i][j].startswith('G'):
-                prev_goal_positions.add((i, j))
+    if solution:
+        # Assign agents to goals based on CSP solution
+        agent_goal_assignments = {key: value for key, value in solution.items()}
+        print("Agent-Goal Assignments:")
+        print(agent_goal_assignments)
 
-    for goal_id in range(num_goals):
-        goal_pos = (random.randint(0, m - 1), random.randint(0, n - 1))
-        while goal_pos in prev_goal_positions:
-            goal_pos = (random.randint(0, m - 1), random.randint(0, n - 1))
-        # env.grid[goal_pos[0]][goal_pos[1]] = f'G({goal_id})'
+        prev_goal_positions = set()
+        for i in range(m):
+            for j in range(n):
+                if env.grid[i][j] is not None and env.grid[i][j].startswith('G'):
+                    prev_goal_positions.add((i, j))
 
-    agent_paths = {}
-    agent_steps = {}
-    for agent_id in range(num_agents):
-        agent = Agent(agent_id, env.agent_positions[agent_id], 'max') 
-        agent_paths[agent_id] = {}
-        agent_steps[agent_id] = {}
         for goal_id in range(num_goals):
-            goal_pos = env.get_goal_position(goal_id)
-            for search_algorithm in [bfs_search, dfs_search, a_star_search]:
-                if search_algorithm == a_star_search:
-                    path = search_algorithm(env, agent.position, goal_pos, env.heuristic)  
-                else:
-                    path = search_algorithm(env, agent.position, goal_pos)  
-                
-                if path:
-                    print(f"Path found by {search_algorithm.__name__} for Agent {agent_id} to Goal {goal_id}: {path}")
-                    visualize_path(env, path)
-                    agent_paths[agent_id][(search_algorithm.__name__, goal_id)] = path
-                    agent_steps[agent_id][(search_algorithm.__name__, goal_id)] = [] 
-                else:
-                    print(f"No path found by {search_algorithm.__name__} for Agent {agent_id} to Goal {goal_id}")
+            goal_pos = (random.randint(0, m - 1), random.randint(0, n - 1))
+            while goal_pos in prev_goal_positions:
+                goal_pos = (random.randint(0, m - 1), random.randint(0, n - 1))
+            # env.grid[goal_pos[0]][goal_pos[1]] = f'G({goal_id})'
 
-    # Find the correct search algorithm path
-    correct_path = None
-    for agent_id in agent_paths:
-        if 'a_star_search' in agent_paths[agent_id]:
-            correct_path = agent_paths[agent_id]['a_star_search']
-            break
+        agent_paths = {}
+        agent_steps = {}
+        for agent_id in range(num_agents):
+            agent = Agent(agent_id, env.agent_positions[agent_id], 'max') 
+            agent_paths[agent_id] = {}
+            agent_steps[agent_id] = {}
+            for goal_id in range(num_goals):
+                goal_pos = env.get_goal_position(goal_id)
+                for search_algorithm in [bfs_search, dfs_search, a_star_search]:
+                    if search_algorithm == a_star_search:
+                        path = search_algorithm(env, agent.position, goal_pos, env.heuristic)  
+                    else:
+                        path = search_algorithm(env, agent.position, goal_pos)  
+                    
+                    if path:
+                        print(f"Path found by {search_algorithm.__name__} for Agent {agent_id} to Goal {goal_id}: {path}")
+                        visualize_path(env, path)
+                        agent_paths[agent_id][(search_algorithm.__name__, goal_id)] = path
+                        agent_steps[agent_id][(search_algorithm.__name__, goal_id)] = [] 
+                    else:
+                        print(f"No path found by {search_algorithm.__name__} for Agent {agent_id} to Goal {goal_id}")
 
-    if correct_path:
-        print(f"Correct path found by A* Search: {correct_path}")
-        visualize_path(env, correct_path)
+        # Find the correct search algorithm path
+        correct_path = None
+        for agent_id in agent_paths:
+            if 'a_star_search' in agent_paths[agent_id]:
+                correct_path = agent_paths[agent_id]['a_star_search']
+                break
 
-    # Calculate utility for each agent
-    for agent_id in range(num_agents):
-        agent = Agent(agent_id, env.agent_positions[agent_id], 'max')
-        utility = calculate_utility(agent, env.grid, start_pos)
-        print(f"Utility for Agent {agent_id}: {utility}")
+        if correct_path:
+            print(f"Correct path found by A* Search: {correct_path}")
+            visualize_path(env, correct_path)
+
+        # Calculate utility for each agent
+        for agent_id in range(num_agents):
+            agent = Agent(agent_id, env.agent_positions[agent_id], 'max')
+            utility = calculate_utility(agent, env.grid, start_pos)
+            print(f"Utility for Agent {agent_id}: {utility}")
+    else:
+        print("No valid solution found for the CSP problem.")
         
     print("\nComparison of Search Algorithms:")
     print("-------------------------------")
